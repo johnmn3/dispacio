@@ -120,7 +120,7 @@ Let's add a new implementation for strings.
 ```
 That's better.
 
-But what about multiple arguments? Just make sure your predicate conforms to the way you're passing in arguments.
+But what about multiple arguments? Just make sure your dispatch function conforms to the manner in which you're passing in arguments.
 ``` clojure
 (defp myinc
   #(and (number? %1) (number? %2) (->> %& (filter (complement number?)) empty?))
