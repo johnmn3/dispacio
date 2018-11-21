@@ -42,7 +42,7 @@ Until this library matures, and if and when there's consensus among seasoned Clo
 ``` clojure
 :deps  {org.clojure/clojure    {:mvn/version "1.9.0"}
         johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
-                                :sha     "get_sha..."}}
+                                :sha     "818aa84d3308908fc22340654c1390278b7fb088"}}
 ```
 In a REPL, require dispacio and refer in `defpoly`, `defp` and `prefer`.
 ``` clojure
