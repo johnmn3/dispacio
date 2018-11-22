@@ -237,4 +237,4 @@ If you are interested in becoming a team member please open an issue.
 
 Copyright © 2018 John M. Newman III
 
-Distributed under the MIT License. See LICENSE
+Distributed under the MIT License. See [LICENSE](https://github.com/johnmn3/dispacio/blob/master/LICENSE)
