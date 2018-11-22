@@ -1,5 +1,2 @@
 {:paths ["src"]
- :deps  {org.clojure/clojure  {:mvn/version "1.10.0-beta8"}}
- :aliases
- {:rebel {:extra-deps {com.bhauman/rebel-readline {:mvn/version "RELEASE"}}
-          :main-opts ["-m" "rebel-readline.main"]}}}
+ :deps  {org.clojure/clojure  {:mvn/version "1.10.0-beta8"}}}
