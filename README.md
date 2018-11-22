@@ -21,7 +21,7 @@ dispacio is similar to a _predicate dispatch_ system.
 
 [Predicate dispatch](https://en.wikipedia.org/wiki/Predicate_dispatch) systems usually offer a comprehensive mechanism that helps users efficiently match against different aspects of arguments being passed to polymorphic functions.
 
-_Open dispatch_, on the other hand, lets user bring in their own opinionated dispatch system or just dispatch off of simple functions.
+_Open dispatch_, on the other hand, lets users bring in their own opinionated dispatch system or just dispatch off of simple functions.
 
 As an open dispatch system, dispacio provides no matching conveniences out of the box, except most of what multimethods provides you: `isa?` hierarchies and `prefer`ing one [polymethod](#polymethods) over another explicitly.
 
