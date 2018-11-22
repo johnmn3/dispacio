@@ -109,7 +109,7 @@ Mmmm, we're passing a string to something that expects a number...
 
 Notice that reference to `user/eval268$myinc>poly-default>x` attempts to inform us which polymethod threw the error. Specifically, it was the one named `myinc`, with a predicate of `:poly/default`, translated to `poly-default`, and an argument of `x`.
 
-With this information, we can tell that the the default implementation we just created is passing the error `java.lang.String cannot be cast to java.lang.Number`.
+With this information, we can tell that the default implementation we just created is passing the error `java.lang.String cannot be cast to java.lang.Number`.
 
 Let's add a new implementation for strings.
 ``` clojure
