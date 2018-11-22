@@ -40,7 +40,7 @@ Until this library matures, and if and when there's consensus among seasoned Clo
 
 ## Getting Started
 ``` clojure
-:deps  {org.clojure/clojure    {:mvn/version "1.9.0"}
+:deps  {org.clojure/clojure    {:mvn/version "1.10.0-beta8"}
         johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
                                 :sha     "818aa84d3308908fc22340654c1390278b7fb088"}}
 ```
