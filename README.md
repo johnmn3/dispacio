@@ -221,7 +221,7 @@ We can leverage spec hierarchies to do very complex dispatching.
 
 You can supply a dispatch function that catches in all cases and looks elsewhere for resolution information. You're freedom to choose is completely ad-hoc, arbitrary and yours alone.
 
-You could bring in `core.logic`, `core.match` or any other number of inference systems to define your resolution strategy. The world's your oyster. And remember: if there's something you don't like about how Rich Hickey is maintaining Clojure, you can _always_ massage the language into something more suitable for your needs - you don't need to ask for Rich's permission. As long as the core Clojure team keeps things open in this way, we're good!
+You could bring in `core.logic`, `core.match` or any other number of inference systems to define your resolution strategy. The world's your oyster!
 
 ## Bugs
 
