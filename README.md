@@ -34,7 +34,7 @@ Multimethods could have been designed to be more open like polymethods in dispac
 :deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
                                 :sha     "get_sha..."}}
 ```
-In a REPL, require dispacio and refer in `defpoly`, `defp` and `prefer`.
+For the purposes of this tutorial, require dispacio in a REPL and refer `defpoly`, `defp`, `prefer` and `<-state`.
 ``` clojure
 (require '[dispacio.alpha.core :refer [defp]])
 ```
@@ -99,7 +99,7 @@ Mmmm, we're passing a string to something that expects a number...
 
 Notice that reference to `user/eval268$myinc>poly-default>x` attempts to inform us which polymethod threw the error. Specifically, it was the one named `myinc`, with a predicate of `:poly/default`, translated to `poly-default`, and an argument of `x`.
 
-With this information, we can tell that the the default implementation we just created is passing the error `java.lang.String cannot be cast to java.lang.Number`.
+With this information, we can tell that the default implementation we just created is passing the error `java.lang.String cannot be cast to java.lang.Number`.
 
 Let's add a new implementation for strings.
 ``` clojure
@@ -110,7 +110,7 @@ Let's add a new implementation for strings.
 ```
 That's better.
 
-But what about multiple arguments? Just make sure your predicate conforms to the number to the way your passing in arguments.
+But what about multiple arguments? Just make sure your dispatch function conforms to the manner in which you're passing in arguments.
 ``` clojure
 (defp myinc
   #(and (number? %1) (number? %2) (->> %& (filter (complement number?)) empty?))
@@ -219,4 +219,4 @@ If you are interested in becoming a team member please open an issue.
 
 Copyright © 2018 John M. Newman III
 
-Distributed under the MIT License. See LICENSE
+Distributed under the MIT License. See [LICENSE](https://github.com/johnmn3/dispacio/blob/master/LICENSE)
