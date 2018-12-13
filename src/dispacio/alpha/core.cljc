@@ -15,10 +15,6 @@
   #?(:clj (apply str (drop 5 (remove #{\space} (str C))))
      :cljs (str C)))
 
-(defn there? [x]
-  #?(:clj (bound? x)
-     :cljs x))
-
 
 ;; state utils
 (defn- get-namespace [poly]
@@ -147,11 +143,18 @@
         pred-name (str/replace pred-name "." "_")]
     (symbol (str "<" poly-name "><" pred-name "><" param-name ">"))))
 
+(defn in-cljs? [env]
+  (boolean (:ns env)))
+
 ;; setup new poly for new function, called by defp if necessary
 (defmacro defpoly [poly-name & [init]]
   `(do
      (let [state# (atom (or ~init {}))
-           old-fn# #'~poly-name
+           old-fn# (if-let [ofn# (-> ~poly-name quote resolve)]
+                    (if ~(in-cljs? &env)
+                       ofn#
+                       #?(:cljs (-> ~poly-name #?(:cljs quote) resolve)
+                          :clj  ~(-> poly-name #?(:cljs quote) resolve))))
            poly-sym# (symbol (str ~(str (ns-name *ns*)) "/" (-> ~poly-name quote)))]
        (defn ~poly-name {:poly true} [& args#]
          (poly-impl ~poly-name args#))
