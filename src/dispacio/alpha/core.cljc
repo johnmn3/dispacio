@@ -32,12 +32,12 @@
 ;; preferable heirarchy utils
 
 ; work on isa? hierarchies in cljs
-; (defn- args-are? [disp args]
-;   (or (isa? (vec args) (->> (first disp) #?(:cljs (mapv str))))
-;       (isa? (mapv get-class args) (->> (first disp) #?(:cljs (mapv str))))))
-
 (defn- args-are? [disp args]
-  (or (isa? (vec args) (first disp)) (isa? (mapv class args) (first disp))))
+  (or (isa? (vec args) (->> (first disp) #?(:cljs (mapv str))))
+      (isa? (mapv get-class args) (->> (first disp) #?(:cljs (mapv str))))))
+
+; (defn- args-are? [disp args]
+;   (or (isa? (vec args) (first disp)) (isa? (mapv class args) (first disp))))
 
 (defn- get-parent [pfn x] (->> (parents x) (filter pfn) first))
 
@@ -151,8 +151,7 @@
 (defmacro defpoly [poly-name & [init]]
   `(do
      (let [state# (atom (or ~init {}))
-           old-fn# (when (-> ~poly-name quote resolve there?)
-                     (-> ~poly-name quote resolve))
+           old-fn# #'~poly-name
            poly-sym# (symbol (str ~(str (ns-name *ns*)) "/" (-> ~poly-name quote)))]
        (defn ~poly-name {:poly true} [& args#]
          (poly-impl ~poly-name args#))
