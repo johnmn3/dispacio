@@ -1,6 +1,6 @@
 # dispacio
 
-dispacio is an _"**open** dispatch"_ system for Clojure.
+dispacio is an _"predicate dispatch system"_ for Clojure/Script.
 
 ## Table of Contents
 
@@ -17,36 +17,26 @@ dispacio is an _"**open** dispatch"_ system for Clojure.
 
 ## Why?
 
-dispacio is similar to a _predicate dispatch_ system.
+dispacio is a very simple _predicate dispatch system_ for Clojure and Clojurescript.
 
 [Predicate dispatch](https://en.wikipedia.org/wiki/Predicate_dispatch) systems usually offer a comprehensive mechanism that helps users efficiently match against different aspects of arguments being passed to polymorphic functions.
 
-_Open dispatch_, on the other hand, lets user bring in their own opinionated dispatch system or just dispatch off of simple functions.
+In _predicate *stack* dispatch_, on the other hand, dispatch predicates are tried in the order that they are defined and the first to return a truthy value wins.
 
-As an open dispatch system, dispacio provides no matching conveniences out of the box, except most of what multimethods provides you: `isa?` hierarchies and `prefer`ing one [polymethod](#polymethods) over another explicitly.
-
-Outside of those hierarchies, dispacio simply attempts to run through each defined polymethod, in the order you've defined them, as fast as possible, with a simple "first match wins" strategy.
-
-You can optionally override the default function that handles the sort order of dispatches.
-
-If you know how to use multimethods, you probably won't have a difficult time figuring out how to use dispacio.
+While dispacio provides no sophisticated matching conveniences out of the box, you do get most of what multimethods provides you: `isa?` hierarchies and `prefer`ing one [polymethod](#polymethods) over another explicitly.
 
 ## Why Not?
 
-When Rich Hickey designed multimethods, he could have easily made them more open like polymethods in dispacio. However, polymethods put a great deal of responsibility on the user. It is probably quite easy for users to shoot themselves in the foot with polymethods. One could potentially define their polymethods in such an order and manner that dispatching becomes slow or confusing. In that regard, dispacio could be seen a sort of 'open experiment' - letting users explore what dispatch strategies are better or worse for their own needs.
-
-Until this library matures, and if and when there's consensus among seasoned Clojure devs that this idiom is not generally harmful, I would not recommend using this library in production systems.
-
+Multimethods could have been designed to be more open like polymethods in dispacio. However, polymethods put much more responsibility on the user. One could potentially define a set of polymethods in way that becomes slow or confusing. In that regard, dispacio could be seen a sort of 'open experiment' - letting users explore what dispatch strategies are better or worse for their own needs. If you don't need the flexibility that dispacio provides, you're probably better off sticking with multimethods.
 
 ## Getting Started
 ``` clojure
-:deps  {org.clojure/clojure    {:mvn/version "1.9.0"}
-        johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
+:deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
                                 :sha     "get_sha..."}}
 ```
 In a REPL, require dispacio and refer in `defpoly`, `defp` and `prefer`.
 ``` clojure
-(require '[dispacio.core :refer [defpoly defp prefer <-state]])
+(require '[dispacio.alpha.core :refer [defp]])
 ```
 
 ## Polymethods
@@ -60,7 +50,9 @@ We first declare them with `defpoly`:
 ;#_=> #'user/foo
 ```
 
-Or we could initialize the poly with a predefined state map, with potentially hand-written ordering and a customized sort function.
+Calling `defpoly` explicitly is optional. Calling `defp` will call `defpoly` for you if necessary.
+
+However, with `defpoly`, we can initialize the poly with a predefined state map, with potentially hand-written ordering and a customized sort function.
 
 ``` clojure
 (defpoly foo {:version 2 :dispatch ["..."] :sort-fn "..."})
@@ -74,8 +66,6 @@ Calling `<-state` on a poly returns its internal atom for your further extension
 ```
 Let's use `defp` to define our first polymethod.
 ``` clojure
-(defpoly myinc)
-;#_=> #'user/myinc
 (defp myinc number? [x] (inc x))
 ;#_=> #object[user$eval253$myinc__254 0x2b95e48b "user$eval253$myinc__254@2b95e48b"]
 (myinc 1)
@@ -139,8 +129,6 @@ Because we are not catching strings on more than one argument, the last call too
 
 Similar to multimethods, we can use Clojure's `isa?` hierarchy to resolve arguments.
 ``` clojure
-(defpoly foo)
-;#_=> #'user/foo
 (derive java.util.Map ::collection)
 ;#_=> nil
 (derive java.util.Collection ::collection)
@@ -166,8 +154,6 @@ Ad hoc hierarchies for dispatch a la carte!
 
 As with multimethods, we can prefer some dispatch functions over others.
 ``` clojure
-(defpoly bar)
-;#_=> #'user/bar
 (derive ::rect ::shape)
 ;#_=> nil
 (defp bar [::rect ::shape] [x y] :rect-shape)
@@ -203,8 +189,6 @@ Let's try an example from Clojure's docs on spec.
 ```
 We can leverage spec hierarchies to do very complex dispatching.
 ``` clojure
-(defpoly make-noise)
-;#_=> #'user/make-noise
 (defp make-noise (partial s/valid? :animal/dog)
   [animal]
   (println (-> animal :dog/breed) "barks" (-> animal :animal/says)))
@@ -219,9 +203,7 @@ We can leverage spec hierarchies to do very complex dispatching.
 ```
 ## Choose Your Own Adventure
 
-You can supply a dispatch function that catches in all cases and looks elsewhere for resolution information. You're freedom to choose is completely ad-hoc, arbitrary and yours alone.
-
-You could bring in `core.logic`, `core.match` or any other number of inference systems to define your resolution strategy. The world's your oyster. And remember: if there's something you don't like about how Rich Hickey is maintaining Clojure, you can _always_ massage the language into something more suitable for your needs - you don't need to ask for Rich's permission. As long as the core Clojure team keeps things open in this way, we're good!
+You could bring in `core.logic`, `core.match`, Datomic's datalog queries or any other number of inference systems to define your resolution strategy. The world's your oyster.
 
 ## Bugs
 
