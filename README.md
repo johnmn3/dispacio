@@ -1,6 +1,6 @@
 # dispacio
 
-dispacio is an _"predicate dispatch system"_ for Clojure/Script.
+dispacio is an _"predicate stack dispatch system"_ for Clojure/Script.
 
 ## Table of Contents
 
@@ -33,7 +33,7 @@ Multimethods could have been designed to be more open like polymethods in dispac
 ## Getting Started
 ``` clojure
 :deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
-                                :sha     "739f539768cfdd915aa23f109e1b9897bd65ace7"}}
+                                :sha     "4870b8d98b525703aae7aad960b5b9fb9e9917f4"}}
 ```
 For the purposes of this tutorial, require dispacio in a REPL and refer `defpoly`, `defp`, `prefer` and `<-state`.
 ``` clojure
