@@ -11,6 +11,7 @@ dispacio is an _"predicate dispatch system"_ for Clojure/Script.
 * [Deriving isa? Dispatch](#deriving-isa?-dispatch)
 * [Prefer Dispatch Functions](#preferring-dispatch-functions)
 * [Spec Validation Dispatch](#spec-validation-dispatch)
+* [Function Extension](#function-extension)
 * [Choose Your Own Adventure](#choose-your-own-adventure)
 * [Bugs](#bugs)
 * [Help!](#help)
@@ -201,6 +202,35 @@ We can leverage spec hierarchies to do very complex dispatching.
 ;#_=> retriever barks woof
 ;nil
 ```
+## Function Extension
+
+In Clojure, we usually extend data types to functions. With polymethods, we can shadow extend functions to arbitrary data types.
+
+``` clojure  
+(defp inc string? [x] (inc (read-string x)))
+;WARNING: inc already refers to: #'clojure.core/inc in namespace: user, being replaced by: #'user/inc
+;#_=> #object[user$eval231$inc__232 0x75ed9710 "user$eval231$inc__232@75ed9710"]
+```
+Here, we are shadowing the `#'clojure.core/inc` function, while storing that original function as the default polymethod implementation.
+
+``` clojure  
+(inc "1")
+;#_=> 2
+(inc 1)
+;#_=> 2
+```
+Let's extend `assoc` to associate by index on strings:
+
+``` clojure
+(defp assoc string? [s i c] (str (subs s 0 i) c (subs s (inc i))))
+;WARNING: assoc already refers to: cljs.core/assoc being replaced by: cljs.user/assoc at line 1 <cljs repl>
+;#_=> #object[cljs$user$assoc]
+(assoc "abc" 2 'x)
+;#_=> "abx"
+```
+
+For now, you can `:exclude` core functions when referring Clojure in order to suppress var replacement warnings.
+
 ## Choose Your Own Adventure
 
 You could bring in `core.logic`, `core.match`, Datomic's datalog queries or any other number of inference systems to define your resolution strategy. The world's your oyster.
