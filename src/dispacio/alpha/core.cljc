@@ -24,7 +24,7 @@
 (defn- get-namespace [poly]
   (->> poly str (drop 2) (apply str) keyword namespace))
 
-(defn- <-state [poly]
+(defn <-state [poly]
   (let [poly-ns (get-namespace poly)]
     (-> @global-polies (get poly))))
 
@@ -107,7 +107,7 @@
       (throw
        (ex-info
         (str "No dispatch in polymethod "
-             (symbol (str (first poly) "/" (second poly)))
+             (-> poly <-state deref :sym)
              " for arguments: "
              (apply pr-str args))
         {})))))
@@ -153,12 +153,13 @@
      (let [state# (atom (or ~init {}))
            old-fn# (when (-> ~poly-name quote resolve there?)
                      (-> ~poly-name quote resolve))
-           kp# [~(str *ns*) (quote ~poly-name)]]
+           poly-sym# (symbol (str ~(str (ns-name *ns*)) "/" (-> ~poly-name quote)))]
        (defn ~poly-name {:poly true} [& args#]
-         (poly-impl kp# args#))
-       (swap! global-polies assoc kp# state#)
+         (poly-impl ~poly-name args#))
+       (swap! global-polies assoc ~poly-name state#)
+       (swap! (-> ~poly-name <-state) assoc :sym poly-sym#)
        (when old-fn#
-         (setup-poly kp# old-fn# :poly/default [])))))
+         (setup-poly ~poly-name old-fn# :poly/default [])))))
 
 
 ;; (defp my-inc string? [s] (inc (r/read-string s)))
@@ -166,8 +167,6 @@
   `(do
      (when-not (-> ~poly-name quote resolve meta :poly)
        (defpoly ~poly-name))
-     (let [poly-fn# (fn ~(mk-poly-name poly-name pred params)
-                      ~params ~body)]
-         (setup-poly [~(str (ns-name *ns*)) (-> ~poly-name quote)]
-           poly-fn# ~pred (quote ~params))
+     (let [poly-fn# (fn ~(mk-poly-name poly-name pred params) ~params ~body)]
+         (setup-poly ~poly-name poly-fn# ~pred (quote ~params))
        ~poly-name)))
