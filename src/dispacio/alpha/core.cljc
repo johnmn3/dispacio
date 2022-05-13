@@ -140,29 +140,34 @@
                     (if (keyword? pred)
                       (classify-key pred)
                       ""))
-        pred-name (str/replace pred-name "." "_")]
-    (symbol (str "<" poly-name "><" pred-name "><" param-name ">"))))
+        pred-name (str/replace pred-name "." "_")
+        pname (-> poly-name str (str/split #"/") (#(str (first %) "-" (second %))))]
+    (symbol (str "<" pname "><" pred-name "><" param-name ">"))))
 
 (defn in-cljs? [env]
   (boolean (:ns env)))
 
 ;; setup new poly for new function, called by defp if necessary
 (defmacro defpoly [poly-name & [init]]
-  `(do
-     (let [state# (atom (or ~init {}))
-           old-fn# (if-let [ofn# (-> ~poly-name quote resolve)]
-                    (if ~(in-cljs? &env)
-                       ofn#
-                       #?(:cljs (-> ~poly-name #?(:cljs quote) resolve)
-                          :clj  ~(-> poly-name #?(:cljs quote) resolve))))
-           poly-sym# (symbol (str ~(str (ns-name *ns*)) "/" (-> ~poly-name quote)))]
-       (defn ~poly-name {:poly true} [& args#]
-         (poly-impl ~poly-name args#))
-       (swap! global-polies assoc ~poly-name state#)
-       (swap! (-> ~poly-name <-state) assoc :sym poly-sym#)
-       (when old-fn#
-         (setup-poly ~poly-name old-fn# :poly/default [])))))
-
+  (let [pname (-> poly-name str (str/split #"/"))
+        plyname (symbol
+                 (if-not (= 2 (count pname))
+                   (first pname)
+                   (second pname)))]
+    `(do
+       (let [state# (atom (or ~init {}))
+             old-fn# (if-let [ofn# (-> ~poly-name quote resolve)]
+                       (if ~(in-cljs? &env)
+                         ofn#
+                         #?(:cljs (-> ~poly-name #?(:cljs quote) resolve)
+                            :clj  ~(-> poly-name #?(:cljs quote) resolve))))
+             poly-sym# (symbol (str ~(str (ns-name *ns*)) "/" (-> ~poly-name quote)))]
+         (defn ~plyname {:poly true} [& args#]
+           (poly-impl ~poly-name args#))
+         (swap! global-polies assoc ~poly-name state#)
+         (swap! (-> ~poly-name <-state) assoc :sym poly-sym#)
+         (when old-fn#
+           (setup-poly ~poly-name old-fn# :poly/default []))))))
 
 ;; (defp my-inc string? [s] (inc (r/read-string s)))
 (defmacro defp [poly-name pred params body]
