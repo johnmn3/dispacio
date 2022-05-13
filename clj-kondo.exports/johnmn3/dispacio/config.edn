@@ -1,0 +1,1 @@
+{:lint-as {dispacio.alpha.core/defp clojure.core/defn}}
