@@ -134,7 +134,9 @@
     (stringify-class v)))
 
 (defn- mk-poly-name [poly-name pred params]
-  (let [param-name (apply str (interpose "_" params))
+  (let [parameters (apply str (interpose "_" params))
+        param-name (-> parameters
+                       (str/replace " " "_"))
         pred-name (if (vector? pred)
                     (apply str (interpose "_" (mapv fix-classes-and-keywords pred)))
                     (if (keyword? pred)
@@ -170,10 +172,15 @@
            (setup-poly ~poly-name old-fn# :poly/default []))))))
 
 ;; (defp my-inc string? [s] (inc (r/read-string s)))
-(defmacro defp [poly-name pred params body]
-  `(do
-     (when-not (-> ~poly-name quote resolve meta :poly)
-       (defpoly ~poly-name))
-     (let [poly-fn# (fn ~(mk-poly-name poly-name pred params) ~params ~body)]
+(defmacro defp [poly-name pred params & body]
+  (if-not (-> poly-name #?(:cljs quote) resolve)
+    `(do
+       (when-not (-> ~poly-name quote resolve meta :poly)
+         (defpoly ~poly-name))
+       (let [poly-fn# (fn ~(mk-poly-name poly-name pred params) ~params ~@body)]
          (setup-poly ~poly-name poly-fn# ~pred (quote ~params))
-       ~poly-name)))
+         ~poly-name))
+    `(do
+       (let [poly-fn# (fn ~(mk-poly-name poly-name pred params) ~params ~@body)]
+         (setup-poly ~poly-name poly-fn# ~pred (quote ~params))
+         ~poly-name))))
