@@ -33,7 +33,7 @@ Multimethods could have been designed to be more open like polymethods in dispac
 ## Getting Started
 ``` clojure
 :deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
-                                :sha     "bdf4f012efd5f96d663b057f3941066075d73363"}}
+                                :sha     "eae1d155ce914dc34e09859c061b70aad98017b1"}}
 ```
 For the purposes of this tutorial, require dispacio in a REPL and refer `defpoly`, `defp`, `prefer` and `<-state`.
 ``` clojure
