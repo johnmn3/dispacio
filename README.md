@@ -135,7 +135,7 @@ There's lots of interesting things you can do with predicate dispatch. Here's a 
 (zip-map (range 10) (range 10))
 ;#_=> {0 0, 7 7, 1 1, 4 4, 6 6, 3 3, 2 2, 9 9, 5 5, 8 8}
 ```
-Now, you wouldn't want to actually do that to replace actual `zip-map`, as it'll run slower and you're blow your stack for large sequences. But the point is that you can construct mutually recursive definitions with `polymethods` to create interesting algorithms.
+Now, you wouldn't want to actually do that to replace actual `zipmap`, as it'll run slower and you'll blow your stack for large sequences. But the point is that you can construct mutually recursive definitions with `polymethods` to create interesting algorithms.
 
 #### Across Namespaces
 
