@@ -4,8 +4,7 @@ dispacio is an _"predicate stack dispatch system"_ for Clojure/Script.
 
 ## Table of Contents
 
-* [Why?](#why?)
-* [Why Not?](#why-not?)
+* [What](#what)
 * [Getting Started](#getting-started)
 * [Polymethods](#polymethods)
 * [Deriving isa? Dispatch](#deriving-isa?-dispatch)
@@ -16,7 +15,7 @@ dispacio is an _"predicate stack dispatch system"_ for Clojure/Script.
 * [Bugs](#bugs)
 * [Help!](#help)
 
-## Why?
+## What
 
 dispacio is a very simple _predicate dispatch system_ for Clojure and Clojurescript.
 
@@ -26,49 +25,26 @@ In _predicate *stack* dispatch_, on the other hand, dispatch predicates are trie
 
 While dispacio provides no sophisticated matching conveniences out of the box, you do get most of what multimethods provides you: `isa?` hierarchies and `prefer`ing one [polymethod](#polymethods) over another explicitly.
 
-## Why Not?
-
-Multimethods could have been designed to be more open like polymethods in dispacio. However, polymethods put much more responsibility on the user. One could potentially define a set of polymethods in way that becomes slow or confusing. In that regard, dispacio could be seen a sort of 'open experiment' - letting users explore what dispatch strategies are better or worse for their own needs. If you don't need the flexibility that dispacio provides, you're probably better off sticking with multimethods.
-
 ## Getting Started
 ``` clojure
 :deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
-                                :sha     "eae1d155ce914dc34e09859c061b70aad98017b1"}}
+                                :sha     "0da02997d68193297fec8bcbfd9de514fb74ef75"}}
 ```
-For the purposes of this tutorial, require dispacio in a REPL and refer `defpoly`, `defp`, `prefer` and `<-state`.
+For the purposes of this tutorial, require dispacio in a REPL and refer `defp`.
 ``` clojure
 (require '[dispacio.alpha.core :refer [defp]])
 ```
 
 ## Polymethods
 
-Polymethods are similar to Clojure's _multimethods_.
-
-We first declare them with `defpoly`:
-
-``` clojure
-(defpoly foo)
-;#_=> #'user/foo
+Polymethods are similar to Clojure's [_multimethods_](https://clojure.org/reference/multimethods). In Clojure, `multimethod` definitions take static values to be matched against the return value of a single dispatch function, provided in a `defmulti`.
+```clojure
+(defmulti my-inc class)
+(defmethod my-inc Number [n] (inc n))
 ```
-
-Calling `defpoly` explicitly is optional. Calling `defp` will call `defpoly` for you if necessary.
-
-However, with `defpoly`, we can initialize the poly with a predefined state map, with potentially hand-written ordering and a customized sort function.
-
+With `polymethods` each method can have its own dispatch function.
 ``` clojure
-(defpoly foo {:version 2 :dispatch ["..."] :sort-fn "..."})
-;#_=> #'user/foo
-```
-Calling `<-state` on a poly returns its internal atom for your further extension:
-
-``` clojure
-@(<-state foo)
-;#_=> {:version 2, :dispatch ["..."], :sort-fn "..."}
-```
-Let's use `defp` to define our first polymethod.
-``` clojure
-(defp myinc number? [x] (inc x))
-;#_=> #object[user$eval253$myinc__254 0x2b95e48b "user$eval253$myinc__254@2b95e48b"]
+(defp my-inc number? [x] (inc x))
 (myinc 1)
 ;#_=> 2
 ```
@@ -78,9 +54,164 @@ Unlike with defmethods, all params are passed to each polymethod's dispatch func
 
 Again, the first match wins.
 
+#### A Canonical Example
+Let's look at a more involved example, inspired by the [Clojure documentation on multimethods](https://clojure.org/about/runtime_polymorphism).
+
+First, a helper function:
+```clojure
+(defn are-species? [& animals-species]
+  (->> animals-species
+       (partition 2)
+       (map (fn [[animal species]] (= species (:Species animal))))
+       (into #{})
+       (= #{true})))
+```
+Then, a series of encounters based on heterogeneous conditions:
+```clojure
+(defp encounter #(are-species? %1 :Bunny %2 :Lion)
+  [b l]
+  :run-away)
+
+(defp encounter #(and (:tired %1)
+                      (are-species? %1 :Bunny %2 :Lion))
+  [b l]
+  :hide)
+
+(defp encounter #(are-species? %1 :Lion %2 :Bunny)
+  [l b]
+  :eat)
+
+(defp encounter #(and (:tired %1)
+                      (are-species? %1 :Lion %2 :Bunny))
+  [l b]
+  :play)
+
+(defp encounter #(= (:Species %1) (:Species %2))
+  [b1 b2]
+  :mate)
+
+(defp encounter #(and (or (:angry %1) (:angry %2))
+                      (are-species? %1 :Lion %2 :Lion))
+  [l1 l2]
+  :fight)
+```
+Then let's try it out:
+```clojure
+(def b1 {:Species :Bunny :tired true})
+(def b2 {:Species :Bunny :other :stuff})
+(def l1 {:Species :Lion :tired true})
+(def l2 {:Species :Lion :angry true})
+
+(encounter b1 b2)
+;#_=> :mate
+(encounter b1 l1)
+;#_=> :hide
+(encounter b2 l1)
+;#_=> :run-away
+(encounter l1 b1)
+;#_=> :play
+(encounter l2 b1)
+;#_=> :eat
+(encounter l1 l2)
+;#_=> :fight
+(encounter l1 (assoc l2 :angry false))
+;#_=> :mate
+```
+Notice that a `polymethod`'s predicate functions are evaluated in the opposite order they are defined. In the example above, the condition `(= (:Species %1) (:Species %2))` will catch all cases where the species is the same, causing them to `:mate`. The `:fight`ing lions condition is then defined, which shadows the _same species_ logic of the prior condition, but only when a lion is angry.
+
+This is an important distinction between a `polymethod` and a `defmethod`: The static values associated with a `defmethod`, checked against the return value of a `defmulti`, make a set that will match exclusively of one another. `polymethod`s on the other hand can be defined disjointly or their predicative scope can overlap. A more generally defined predicate can shadow a more specifically defined predicate if it was defined after the more specifically defined predicate. Therefore, it is probably best to define your more general, catch-all predicates earlier rather than later. That is, unless we want a more general case to short-curcuit the rest of the stack, like we did with the `:mate`ing example - we could have defined that one first, but this way we don't have to check all the other predicates before deciding to `:mate`. Useful for when you're in a rush. However, our `:tired` scenarios had to be defined after their more general `:run-away` and `:eat` scenarios, otherwise they would have been fully shadowed and prevented from catching the condition.
+
+#### Mutual Recursion
+There's lots of interesting things you can do with predicate dispatch. Here's a cool recursive definition of zipmap I copped from [this paper on predicate dispatch](https://homes.cs.washington.edu/~mernst/pubs/dispatching-ecoop98.pdf):
+```clojure
+(defp zip-map #(or (empty? %1) (empty? %2))
+  [_ _]
+  nil)
+
+(defp zip-map #(and (seq %1) (seq %2))
+  [a b]
+  (apply merge
+         {(first a) (first b)}
+         (zip-map (rest a) (rest b))))
+
+(zip-map (range 10) (range 10))
+;#_=> {0 0, 7 7, 1 1, 4 4, 6 6, 3 3, 2 2, 9 9, 5 5, 8 8}
+```
+Now, you wouldn't want to actually do that to replace actual `zip-map`, as it'll run slower and you're blow your stack for large sequences. But the point is that you can construct mutually recursive definitions with `polymethods` to create interesting algorithms.
+
+#### Across Namespaces
+
+Imagine you want to expose a low-level email function and a high level `polymethod` from a namespace called `emails`:
+```clojure
+(ns emails
+  (:require [dispacio.alpha.core :refer [defp]]))
+
+(defn post-email! [email]
+  (println :sending-email :msg (:msg email)))
+
+(defp send! :poly/default
+  [email]
+  (println :don't-know-what-to-do-with-this email))
+```
+You can then implement the polymethods across namespaces of different domains:
+```clojure
+(ns promotion
+  (:require [dispacio.alpha.core :refer [defp]]
+            [emails :as emails]))
+
+(defp emails/send! #(-> % :email-type (= :promotion))
+  [email]
+  (emails/post-email!
+   (assoc email
+          :msg (str "Congrats! You got a promotion " (:name email) "!"))))
+```
+```clojure
+(ns welcome
+  (:require [dispacio.alpha.core :refer [defp]]
+            [emails :as emails]))
+
+(defp emails/send! #(-> % :file-type namespace (= "welcome"))
+  [email]
+  (emails/post-email!
+   (assoc email
+          :msg (str "Welcome! Glad you're here " (:name email) "!"))))
+```
+```clojure
+(ns confirmation
+  (:require [dispacio.alpha.core :refer [defp]]
+            [emails :as emails]))
+
+(defp emails/send! #(-> % :file-kind (= :confirmation))
+  [email]
+  (emails/post-email!
+   (assoc email
+          :msg (str "Confirmed! It's true " (:name email) "."))))
+```
+And then you could just call the email namespace from jobs namespace or whatever:
+
+```clojure
+(ns jobs
+  (:require [emails :as emails]))
+
+(def files ; <- dispatching on heterogeneous/inconsistent data
+  [{:file-kind  :confirmation :name "Bob"}
+   {:file-type  :welcome/new  :name "Mary"}
+   {:email-type :promotion    :name "Jules"}])
+
+(->> files (map emails/send!))
+
+;#_=> :sending-email :msg Confirmed! It's true Bob.
+;#_=> :sending-email :msg Welcome! Glad you're here Mary!
+;#_=> :sending-email :msg Congrats! You got a promotion Jules!
+;#_=> (nil nil nil)
+```
+This gives you the cross-namespace abilities of defmethods with the flexibility of arbitrary predicate dispatch.
+
 ### Troubleshooting
 
-Let's pass in some mysterious data.
+Let's go back to our `my-inc` example.
+
+Imagine we pass in some mysterious data.
 ``` clojure
 (myinc "1")
 ;#_=> Execution error (ExceptionInfo) at dispacio.core/poly-impl (core.clj:75).
