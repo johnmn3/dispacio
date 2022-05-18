@@ -45,7 +45,7 @@ Polymethods are similar to Clojure's [_multimethods_](https://clojure.org/refere
 With `polymethods` each method can have its own dispatch function.
 ``` clojure
 (defp my-inc number? [x] (inc x))
-(myinc 1)
+(my-inc 1)
 ;#_=> 2
 ```
 `1` is passed directly to the `number?` function.
@@ -211,47 +211,47 @@ Let's go back to our `my-inc` example.
 
 Imagine we pass in some mysterious data.
 ``` clojure
-(myinc "1")
+(my-inc "1")
 ;#_=> Execution error (ExceptionInfo) at dispacio.core/poly-impl (core.clj:75).
-;No dispatch in polymethod user/eval253$myinc for arguments: "1"
+;No dispatch in polymethod user/eval253$my-inc for arguments: "1"
 ```
-We can see the error is thrown by `poly-impl` because the poly `myinc` has no method for the argument `"1"`.
+We can see the error is thrown by `poly-impl` because the poly `my-inc` has no method for the argument `"1"`.
 
-Let's give `myinc` some default behavior so that we can diagnose this anomoly.
+Let's give `my-inc` some default behavior so that we can diagnose this anomoly.
 ``` clojure
-(defp myinc :poly/default [x] (inc x))
-;#_=> #object[user$eval253$myinc__254 0x2b95e48b "user$eval253$myinc__254@2b95e48b"]
-(myinc "1")
-;#_=> Execution error (ClassCastException) at user/eval268$myinc>poly-default>x (REPL:1).
+(defp my-inc :poly/default [x] (inc x))
+;#_=> #object[user$eval253$my-inc__254 0x2b95e48b "user$eval253$my-inc__254@2b95e48b"]
+(my-inc "1")
+;#_=> Execution error (ClassCastException) at user/eval268$my-inc>poly-default>x (REPL:1).
 ;java.lang.String cannot be cast to java.lang.Number
 ```
 Mmmm, we're passing a string to something that expects a number...
 
-Notice that reference to `user/eval268$myinc>poly-default>x` attempts to inform us which polymethod threw the error. Specifically, it was the one named `myinc`, with a predicate of `:poly/default`, translated to `poly-default`, and an argument of `x`.
+Notice that reference to `user/eval268$my-inc>poly-default>x` attempts to inform us which polymethod threw the error. Specifically, it was the one named `my-inc`, with a predicate of `:poly/default`, translated to `poly-default`, and an argument of `x`.
 
 With this information, we can tell that the default implementation we just created is passing the error `java.lang.String cannot be cast to java.lang.Number`.
 
 Let's add a new implementation for strings.
 ``` clojure
-(defp myinc string? [x] (inc (read-string x)))
-;#_=> #object[user$eval253$myinc__254 0x2b95e48b "user$eval253$myinc__254@2b95e48b"]
-(myinc "1")
+(defp my-inc string? [x] (inc (read-string x)))
+;#_=> #object[user$eval253$my-inc__254 0x2b95e48b "user$eval253$my-inc__254@2b95e48b"]
+(my-inc "1")
 ;#_=> 2
 ```
 That's better.
 
 But what about multiple arguments? Just make sure your dispatch function conforms to the manner in which you're passing in arguments.
 ``` clojure
-(defp myinc
+(defp my-inc
   #(and (number? %1) (number? %2) (->> %& (filter (complement number?)) empty?))
   [x y & z]
   (inc (apply + x y z)))
-;#_=> #object[user$eval253$myinc__254 0x2b95e48b "user$eval253$myinc__254@2b95e48b"]
-(myinc 1 2 3)
+;#_=> #object[user$eval253$my-inc__254 0x2b95e48b "user$eval253$my-inc__254@2b95e48b"]
+(my-inc 1 2 3)
 ;#_=> 7
-(myinc 1 2 3 "4")
+(my-inc 1 2 3 "4")
 ;#_=> Execution error (ArityException) at dispacio.core/poly-impl (core.clj:73).
-;Wrong number of args (4) passed to: user/eval268/myinc>poly-default>x--269
+;Wrong number of args (4) passed to: user/eval268/my-inc>poly-default>x--269
 ```
 Because we are not catching strings on more than one argument, the last call took the default path, which we can see takes only one argument, `x`.
 
