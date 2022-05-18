@@ -70,7 +70,7 @@
 (defn- get-disp [poly filter-fn]
   (when-let [state (-> poly <-state)]
     (when (= (type (atom nil)) (type state))
-      (-> @state (get :dispatch) (->> (filter filter-fn)) first))))
+      (-> @state (get :dispatch) reverse (->> (filter filter-fn)) first))))
 
 (defn- pred->disp [poly pred]
   (get-disp poly #(-> % first (= pred))))
