@@ -21,7 +21,7 @@ dispacio is a very simple _predicate dispatch system_ for Clojure and Clojurescr
 
 [Predicate dispatch](https://en.wikipedia.org/wiki/Predicate_dispatch) systems usually offer a comprehensive mechanism that helps users efficiently match against different aspects of arguments being passed to polymorphic functions.
 
-In _predicate *stack* dispatch_, on the other hand, dispatch predicates are tried in the order that they are defined and the first to return a truthy value wins.
+In _predicate *stack* dispatch_, on the other hand, dispatch predicates are tried in the opposite order that they are defined and the first to return a truthy value wins.
 
 While dispacio provides no sophisticated matching conveniences out of the box, you do get most of what multimethods provides you: `isa?` hierarchies and `prefer`ing one [polymethod](#polymethods) over another explicitly.
 
@@ -51,8 +51,6 @@ With `polymethods` each method can have its own dispatch function.
 `1` is passed directly to the `number?` function.
 
 Unlike with defmethods, all params are passed to each polymethod's dispatch function.
-
-Again, the first match wins.
 
 #### A Canonical Example
 Let's look at a more involved example, inspired by the [Clojure documentation on multimethods](https://clojure.org/about/runtime_polymorphism).
