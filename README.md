@@ -27,8 +27,7 @@ While dispacio provides no sophisticated matching conveniences out of the box, y
 
 ## Getting Started
 ``` clojure
-:deps  {johnmn3/dispacio       {:git/url "https://github.com/johnmn3/dispacio.git"
-                                :sha     "0da02997d68193297fec8bcbfd9de514fb74ef75"}}
+:deps  {net.clojars.john/dispacio {:mvn/version "0.1.0-alpha.1"}}
 ```
 For the purposes of this tutorial, require dispacio in a REPL and refer `defp`.
 ``` clojure
