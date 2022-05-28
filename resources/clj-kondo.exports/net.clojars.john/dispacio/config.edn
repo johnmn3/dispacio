@@ -1,2 +1,1 @@
-{:lint-as {dispacio.alpha.core/defp clojure.core/defmethod}
- :linters {:unresolved-symbol {:exclude [(dispacio.alpha.core/defp)]}}}
+{:hooks {:macroexpand {dispacio.alpha.core/defp dispacio.alpha.core/defp}}}
