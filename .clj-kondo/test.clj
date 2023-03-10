@@ -1,6 +1,8 @@
 (ns test
-  (:require [dispacio.alpha.core :refer [defp]]))
+  (:require
+   [clojure.edn :as edn]
+   [dispacio.alpha.core :refer [defp]]))
 
-(defp my-inc string? [x] (inc (read-string x)))
+(defp my-inc string? [x] (inc (edn/read-string x)))
 
 (my-inc "1")
