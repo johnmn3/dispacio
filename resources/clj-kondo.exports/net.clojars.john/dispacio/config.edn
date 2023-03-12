@@ -1,1 +1,2 @@
-{:hooks {:macroexpand {dispacio.alpha.core/defp dispacio.alpha.core/defp}}}
+{:hooks {:macroexpand {dispacio.alpha.core/defp dispacio.alpha.core/defp}}
+ :config-in-call {dispacio.alpha.core/defp {:linters {:unresolved-symbol {:exclude [read-string]}}}}}
